@@ -1,9 +1,11 @@
 Name: YOUR NAME HERE
 
-| Date    |  Time  |                                     Update |
-|:--------|:------:|-------------------------------------------:|
-| April 5 | 9-10pm | I tried to write abstract, efficient code. |
-|         |        |                                            |
+| Date  |     Time      |                                                                                                                                                                                                                                                                                                                                                                                           Update |
+|:------|:-------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| 11/16 |  2:30-3:00pm  | I spent this time discussing pseudocode with my friends. We decided we could create a file header which could indicate the number of consecutive repeat numbers of bits, as well as the max # of bits needed to represent the highest # of bits, maxBits. Then you can write out each # of consec repeats of bits, alternating between 0 and 1 each time, and representing it through 'maxBits.' |
+| 11/17 |  6:00-7:00pm  |                                                                                                                                                                                                                                                                                                                             I spent this time writing out the above but I have errors right now! |
+| 11/18 | 10:15-10:40am |                                                                                                                                           I was able to fix my errors and get the code working! I am now switching my approach to encoding a map of each "consecutive length" number in the file header, and then representing each of those indices in binary. I am now working on coding that. |
+| 11/18 |  6:45-7:15pm  |                                                                                                                                                                                                                                                 I got the code working! I am using a log function to determine the max number of bits needed to represent a given size of numbers to save space. |
 
 
 To add a new row to the table, click into a cell and then hit shift-enter.
