@@ -25,11 +25,14 @@ import java.util.ArrayList;
  *  @author Robert Sedgewick
  *  @author Kevin Wayne
  *  @author Zach Blick
- *  @author YOUR NAME HERE
+ *  @author Cody Kletter
  */
 public class BitmapCompressor {
+    // magic numbers for zero, one bits, max bit size for each run length and the max int value for that bit size
     public static boolean ONE = true;
     public static boolean ZERO = false;
+    public static final int BIT_SIZE = 8;
+    public static final int MAX_SIZE = 255;
     /**
      * Reads a sequence of bits from standard input, compresses them,
      * and writes the results to standard output.
@@ -37,56 +40,33 @@ public class BitmapCompressor {
     public static void compress() {
         boolean nextBoolean = BinaryStdIn.readBoolean();
         boolean startBoolean = nextBoolean;
-        // Keep track of the highest consecutive run of bits
-        int longestConsec = Integer.MIN_VALUE;
         // Array list of each length of consecutive bit runs
         ArrayList<Integer> bitConsecs = new ArrayList<Integer>();
         // Read each set of consecutive ints
         while (!BinaryStdIn.isEmpty()) {
             // Calculate the run length of our next chunk of a certain bit
             int num = nextConsec(nextBoolean);
-            longestConsec = Math.max(longestConsec, num);
             // Add consecutive repeat num to array list
             bitConsecs.add(num);
             // Alternate which bit we are looking at
             nextBoolean = !nextBoolean;
         }
-        int length = bitConsecs.size();
-        // Create a new array list of unique run lengths
-        ArrayList<Integer> bitConsecsUnique = new ArrayList<Integer>();
-        // Only add unique run lengths to new array list
-        for (int element : bitConsecs) {
-            if (!bitConsecsUnique.contains(element)) {
-                bitConsecsUnique.add(element);
+        // if the bitmap starts with a one, pad the beginning of the file with zeros to start
+        if (startBoolean == ONE) {
+            BinaryStdOut.write(0, BIT_SIZE);
+        }
+        // loop through each of our run lengths
+        for (int runLength : bitConsecs) {
+            // while the length of the run is greater than max bit size
+            while (runLength > MAX_SIZE) {
+                // write the max size of the run we can (255), then subtract that from our run length
+                BinaryStdOut.write(MAX_SIZE, BIT_SIZE);
+                // write out a byte of zeros to represent no run length of the next bit
+                BinaryStdOut.write(0, BIT_SIZE);
+                runLength = runLength - MAX_SIZE;
             }
-        }
-        int noDupLength = bitConsecsUnique.size();
-        // determine max # of bits needed for given length
-        int minMapBits = (int) Math.ceil((Math.log(noDupLength) / Math.log(2))) + 1;
-        // determine max # of bits needed for given longest consecutive num of bits
-        int minBits = (int) Math.ceil((Math.log(longestConsec) / Math.log(2))) + 1;
-
-        // create file header
-        // write the length of each of our runs
-        BinaryStdOut.write(length);
-        // write min bits needed for each of our consecutive run lengths
-        BinaryStdOut.write(minBits);
-        // write the length of each of our runs with no duplicates
-        BinaryStdOut.write(noDupLength);
-        // write starting bit
-        BinaryStdOut.write(startBoolean);
-        // create a map to convert each run length to its unique code value
-        int[] consecMap = new int[longestConsec + 1];
-        // write each length code into file header for each unique run length
-        for (int i = 0; i < noDupLength; i++) {
-            BinaryStdOut.write(bitConsecsUnique.get(i), minBits);
-            consecMap[bitConsecsUnique.get(i)] = i;
-        }
-
-        // write out the code of each consecutive run length in the body of the file
-        for (int i = 0; i < length; i++) {
-            int consecShortened = consecMap[bitConsecs.get(i)];
-            BinaryStdOut.write(consecShortened, minMapBits);
+            // write out remaining run length in 8 bits
+            BinaryStdOut.write(runLength, BIT_SIZE);
         }
         BinaryStdOut.close();
     }
@@ -114,55 +94,19 @@ public class BitmapCompressor {
      * and writes the results to standard output.
      */
     public static void expand() {
-        // read file header
-        // read size of each of the run lengths
-        int length = BinaryStdIn.readInt();
-        // read the minimum bits needed to write all of the run lengths
-        int minBits = BinaryStdIn.readInt();
-        // read the size of each of the unique run lengths
-        int noDupLength = BinaryStdIn.readInt();
-        // calculate the minimum bits needed for our code lengths
-        int minMapBits = (int) Math.ceil((Math.log(noDupLength) / Math.log(2))) + 1;
-        // read the starting bit
-        boolean nextBoolean = BinaryStdIn.readBoolean();
-        // create a map to map each code to its corresponding run length from the header file
-        int[] consecMap = new int[noDupLength + 1];
-        // loop through each of our codes
-        for (int i = 0; i < noDupLength; i++) {
-            // read each unique run length and add it to our map
-            int nextConsec = BinaryStdIn.readInt(minBits);
-            consecMap[i] = nextConsec;
-        }
-
-        // loop through each run length
-        for (int i = 0; i < length; i++) {
-            // read the code for the run length and determine its corresponding run length
-            int mapIndex = BinaryStdIn.readInt(minMapBits);
-            int nextConsec = consecMap[mapIndex];
-            // write out the current bit the number of times of the run length to expanded file
-            for (int j = 0; j < nextConsec; j++) {
-                BinaryStdOut.write(nextBoolean);
+        // assume we start with zero
+        boolean currentBit = ZERO;
+        // keep looping until we've read entire compressed file
+        while (!BinaryStdIn.isEmpty()) {
+            // read the next 8 bits
+            int runLength = BinaryStdIn.readInt(BIT_SIZE);
+            // print each bit in the run to expanded file
+            for (int i = 0; i < runLength; i++) {
+                BinaryStdOut.write(currentBit);
             }
-            // change boolean to opposite
-            nextBoolean = !nextBoolean;
+            // alternate our bit
+            currentBit = !currentBit;
         }
-
-//        int index = 0;
-        // create map of ints to ints conversion
-//        int[] consecMap = new int[length];
-//        for (int i = 0; i < length; i++) {
-//            int BinaryStdIn.readInt();
-//        }
-
-//        while (index < length * maxBits) {
-//            int nextConsec = BinaryStdIn.readInt(maxBits);
-//            // print the next boolean that number of times
-//            for (int i = 0; i < nextConsec; i++) {
-//                BinaryStdOut.write(nextBoolean);
-//            }
-//            nextBoolean = !nextBoolean;
-//            index += maxBits;
-//        }
         BinaryStdOut.close();
     }
 
