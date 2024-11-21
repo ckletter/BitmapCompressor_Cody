@@ -92,16 +92,20 @@ public class BitmapCompressor {
     }
 
     /**
-     *
-     * @param startBit
-     * @return
+     * Given a starting bit, determines the run length of that bit in our
+     * current location in the file
+     * @param startBit either a 1 or a 0, true or false
+     * @return run length, as an int
      */
     public static int nextConsec(boolean startBit) {
+        // look for the opposite bit of the starting bit (either 0 or 1
         boolean endBit = !startBit;
         int bitCount = 1;
+        // Keep looping and counting bits until the file is empty or until the consecutive run ends
         while (!BinaryStdIn.isEmpty() && BinaryStdIn.readBoolean() != endBit) {
             bitCount++;
         }
+        // return consecutive run length
         return bitCount;
     }
 
@@ -111,23 +115,35 @@ public class BitmapCompressor {
      */
     public static void expand() {
         // read file header
+        // read size of each of the run lengths
         int length = BinaryStdIn.readInt();
+        // read the minimum bits needed to write all of the run lengths
         int minBits = BinaryStdIn.readInt();
+        // read the size of each of the unique run lengths
         int noDupLength = BinaryStdIn.readInt();
+        // calculate the minimum bits needed for our code lengths
         int minMapBits = (int) Math.ceil((Math.log(noDupLength) / Math.log(2))) + 1;
+        // read the starting bit
         boolean nextBoolean = BinaryStdIn.readBoolean();
-
+        // create a map to map each code to its corresponding run length from the header file
         int[] consecMap = new int[noDupLength + 1];
+        // loop through each of our codes
         for (int i = 0; i < noDupLength; i++) {
+            // read each unique run length and add it to our map
             int nextConsec = BinaryStdIn.readInt(minBits);
             consecMap[i] = nextConsec;
         }
+
+        // loop through each run length
         for (int i = 0; i < length; i++) {
+            // read the code for the run length and determine its corresponding run length
             int mapIndex = BinaryStdIn.readInt(minMapBits);
             int nextConsec = consecMap[mapIndex];
+            // write out the current bit the number of times of the run length to expanded file
             for (int j = 0; j < nextConsec; j++) {
                 BinaryStdOut.write(nextBoolean);
             }
+            // change boolean to opposite
             nextBoolean = !nextBoolean;
         }
 
